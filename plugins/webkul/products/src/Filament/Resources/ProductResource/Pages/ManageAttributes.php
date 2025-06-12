@@ -49,17 +49,13 @@ class ManageAttributes extends ManageRelatedRecords
                     ->getOptionLabelFromRecordUsing(function ($record): string {
                         return $record->name.($record->trashed() ? ' (Deleted)' : '');
                     })
+                    ->disableOptionWhen(function (string $value) {
+                        return $this->getOwnerRecord()->attributes->contains('attribute_id', $value);
+                    })
                     ->searchable()
                     ->preload()
+                    ->disabledOn('edit')
                     ->createOptionForm(fn (Forms\Form $form): Form => AttributeResource::form($form))
-                    ->editOptionForm(fn (Forms\Form $form): Form => AttributeResource::form($form))
-                    ->editOptionAction(function(Forms\Components\Actions\Action $action, Forms\Get $get, Forms\Set $set) {
-                        $action->after(function (ProductAttribute $record) use($get, $set) {
-                            $filteredOptionIds = array_intersect($get('options'), $record->options->pluck('id')->toArray());
-
-                            $set('options', $filteredOptionIds);
-                        });
-                    })
                     ->afterStateUpdated(function ($state, Forms\Set $set) {
                         $set('options', []);
                     }),
